@@ -4,6 +4,7 @@ import com.example.authservice.dto.ChangePasswordRequest;
 import com.example.authservice.dto.ChangePasswordResponse;
 import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.LoginResponse;
+import com.example.authservice.dto.UpdatePasswordDto;
 import com.example.authservice.exception.AuthException;
 import com.example.authservice.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,19 +84,22 @@ public class AuthService {
         // Hash mật khẩu mới
         String hashedNewPassword = passwordEncoder.encode(request.getNewPassword());
 
-        // Cập nhật mật khẩu mới
-        user.put("password", hashedNewPassword);
+        // Lấy userId
         String userId = (String) user.get("userId");
+
+        // Cập nhật mật khẩu mới qua endpoint /users/{id}/password
+        Map<String, String> passwordRequest = new HashMap<>();
+        passwordRequest.put("password", hashedNewPassword);
 
         webClient.put()
                 .uri(uriBuilder -> uriBuilder
                         .scheme("http")
                         .host("localhost")
                         .port(8083)
-                        .path("/users/{id}")
+                        .path("/users/{id}/password")
                         .build(userId)
                 )
-                .bodyValue(user)
+                .bodyValue(passwordRequest)
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();

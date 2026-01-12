@@ -92,10 +92,13 @@ const ChangePassword = () => {
     if (data?.success) {
       setServerError('');
       reset();
-      alert('✅ Đổi mật khẩu thành công! Vui lòng đăng nhập lại.');
+      // Clear auth data
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('profile');
+      // Force reload and redirect to login
       setTimeout(() => {
-        navigate(path.login);
-      }, 1000);
+        window.location.href = `${window.location.origin}${path.login}`;
+      }, 2000);
     }
   }, [mutateError, data, setError, reset, navigate]);
 

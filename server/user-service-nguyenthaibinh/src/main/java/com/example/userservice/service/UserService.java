@@ -51,6 +51,13 @@ public class UserService {
         });
     }
 
+    public Optional<User> updatePassword(String id, String hashedPassword) {
+        return userRepository.findById(id).map(existing -> {
+            existing.setPassword(hashedPassword);
+            return userRepository.save(existing);
+        });
+    }
+
     public boolean deleteUser(String id) {
         return userRepository.findById(id).map(user -> {
             userRepository.delete(user);

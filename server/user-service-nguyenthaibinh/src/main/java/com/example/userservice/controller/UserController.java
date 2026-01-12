@@ -54,6 +54,17 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> updatePassword(@PathVariable String id, @RequestBody Map<String, String> request) {
+        String hashedPassword = request.get("password");
+        if (hashedPassword == null || hashedPassword.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Password is required"));
+        }
+        return userService.updatePassword(id, hashedPassword)
+                .map(user -> ResponseEntity.ok(Map.of("success", true, "message", "Password updated successfully")))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable String id) {
         boolean deleted = userService.deleteUser(id);
