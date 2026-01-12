@@ -5,7 +5,7 @@ import { FormValues, inputSchema } from 'src/utils/inputSchema';
 import { useMutateUserRegister } from 'src/hooks/useMutateUserRegister';
 import { isAxiosUnprocessableEntityError } from 'src/utils/axiosError';
 import { ErrorResponseApi } from 'src/types/util.type';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from 'src/context/authContext';
 import { path } from '../../constants/path';
 
@@ -28,8 +28,10 @@ const Register = () => {
 
   const { setIsAuthenticated, setProfile } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [serverError, setServerError] = useState('');
 
   const onSubmitHandler: SubmitHandler<FormValues> = (data) => {
+    setServerError('');
     mutateUser({ email: data.email, password: data.password });
   };
 
@@ -41,12 +43,14 @@ const Register = () => {
         navigate(path.login);
       } else if (data.code === 409) {
         // Email already exists
+        setServerError(data.message || 'Email này đã được đăng ký');
         setError('email', {
           type: 'Server error',
           message: data.message || 'Email này đã được đăng ký'
         });
       } else if (data.code === 400) {
         // Bad request - show as general error
+        setServerError(data.message || 'Thông tin không hợp lệ');
         setError('email', {
           type: 'Server error',
           message: data.message || 'Thông tin không hợp lệ'
@@ -55,6 +59,24 @@ const Register = () => {
     }
 
     // Handle axios errors
+    if (mutateUserRegisterError) {
+      const error = mutateUserRegisterError as any;
+      let errorMessage = 'Có lỗi xảy ra, vui lòng thử lại';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 409) {
+        errorMessage = 'Email này đã được đăng ký';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Lỗi máy chủ. Vui lòng thử lại sau';
+      }
+
+      setServerError(errorMessage);
+    }
+
+    // Handle form validation errors
     if (
       isAxiosUnprocessableEntityError<ErrorResponseApi<Omit<FormValues, 'confirm_password'>>>(mutateUserRegisterError)
     ) {
@@ -87,6 +109,13 @@ const Register = () => {
             {!isLoading && (
               <form onSubmit={handleSubmit(onSubmitHandler)} className='rounded bg-white p-10 shadow-sm' noValidate autoComplete='off'>
                 <div className='text-2xl'>Đăng ký</div>
+                
+                {/* Server Error */}
+                {serverError && (
+                  <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm'>
+                    ❌ {serverError}
+                  </div>
+                )}
                 
                 <Input
                   register={register}

@@ -5,7 +5,7 @@ import { useMutateUserLogin } from 'src/hooks/useMutateUserLogin';
 import { LoginFormValues, loginInputSchema } from 'src/utils/inputSchema';
 import { isAxiosUnprocessableEntityError } from 'src/utils/axiosError';
 import { ErrorResponseApi } from 'src/types/util.type';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from 'src/context/authContext';
 import { path } from '../../constants/path';
 
@@ -25,12 +25,46 @@ const Login = () => {
   const { mutate: mutateUser, error: mutateUserLoginError, data, isLoading } = useMutateUserLogin();
   const { setIsAuthenticated, setProfile } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [serverError, setServerError] = useState('');
 
   const onSubmitHandler: SubmitHandler<LoginFormValues> = (data) => {
+    setServerError('');
     mutateUser({ email: data.email, password: data.password });
   };
 
   useEffect(() => {
+    // Handle response format: {code, message, data, timestamp}
+    if (data) {
+      if (data.code === 200 && data.data?.user) {
+        setIsAuthenticated(true);
+        setProfile(data.data.user);
+        navigate(path.home);
+      } else if (data.code === 401) {
+        setServerError(data.message || 'Email hoặc mật khẩu không chính xác');
+      } else if (data.code >= 400) {
+        setServerError(data.message || 'Có lỗi xảy ra, vui lòng thử lại');
+      }
+    }
+
+    // Handle axios errors
+    if (mutateUserLoginError) {
+      const error = mutateUserLoginError as any;
+      let errorMessage = 'Có lỗi xảy ra, vui lòng thử lại';
+
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Email hoặc mật khẩu không chính xác';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Lỗi máy chủ. Vui lòng thử lại sau';
+      }
+
+      setServerError(errorMessage);
+    }
+
+    // Handle form validation errors
     if (isAxiosUnprocessableEntityError<ErrorResponseApi<LoginFormValues>>(mutateUserLoginError)) {
       const formError = mutateUserLoginError.response?.data.data;
 
@@ -43,13 +77,7 @@ const Login = () => {
         });
       }
     }
-
-    if (data?.data.user) {
-      setIsAuthenticated(true);
-      setProfile(data?.data.user);
-      navigate(path.home);
-    }
-  }, [data?.data.user, mutateUserLoginError, navigate, setError, setIsAuthenticated, setProfile]);
+  }, [data, mutateUserLoginError, navigate, setError, setIsAuthenticated, setProfile]);
 
   return (
     <div className='bg-blue-200'>
@@ -62,6 +90,13 @@ const Login = () => {
           <div className='lg:col-span-2 lg:col-start-4'>
             <form onSubmit={handleSubmit(onSubmitHandler)} className='rounded bg-white p-10 shadow-sm' noValidate>
               <div className='text-2xl'>Đăng nhập</div>
+              
+              {/* Server Error */}
+              {serverError && (
+                <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-600 text-sm'>
+                  ❌ {serverError}
+                </div>
+              )}
               
               {/* Input Email */}
               <Input

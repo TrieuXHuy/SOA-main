@@ -58,18 +58,19 @@ http.interceptors.response.use(
   function (error: AxiosError) {
     // Any status codes that falls outside the range of 2xx cause this function to trigger
     // Do something with response error
-    if (error.response?.status !== HttpStatusCode.UnprocessableEntity) {
-      toast.error(error.message, {
-        position: 'top-right',
-        autoClose: 4000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: 'light'
-      });
-    }
+    // Disabled: Let components handle error display instead of global toast
+    // if (error.response?.status !== HttpStatusCode.UnprocessableEntity) {
+    //   toast.error(error.message, {
+    //     position: 'top-right',
+    //     autoClose: 4000,
+    //     hideProgressBar: false,
+    //     closeOnClick: true,
+    //     pauseOnHover: true,
+    //     draggable: true,
+    //     progress: undefined,
+    //     theme: 'light'
+    //   });
+    // }
 
     if (error.response?.status === HttpStatusCode.Unauthorized) {
       clearLocalStorage();

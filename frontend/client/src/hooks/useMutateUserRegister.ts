@@ -30,14 +30,16 @@ export const useMutateUserRegister = (): UserRegisterResponse => {
     UserRegisterParams
   >({
     mutationFn: async (userInfo: UserRegisterParams) => {
-      // Prepare minimal payload - only required fields
+      // Prepare payload with all required fields
       const payload = {
-        fullName: userInfo.email.split('@')[0], // Use email prefix as fullName if not provided
+        userId: `USER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // Generate unique userId
+        fullName: userInfo.email.split('@')[0], // Use email prefix as fullName
         email: userInfo.email,
         password: userInfo.password,
         role: 'customer'
       };
 
+      console.log('Registering with payload:', payload);
       const res = await http.post(apiEndpoints.register, payload);
       return res.data;
     },
