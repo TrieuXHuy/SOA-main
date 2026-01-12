@@ -1,5 +1,7 @@
 package com.example.authservice.service;
 
+import com.example.authservice.dto.ChangePasswordRequest;
+import com.example.authservice.dto.ChangePasswordResponse;
 import com.example.authservice.dto.LoginRequest;
 import com.example.authservice.dto.LoginResponse;
 import com.example.authservice.exception.AuthException;
@@ -50,5 +52,55 @@ public class AuthService {
         response.put("access_token", token);
         response.put("user", user);
         return ResponseEntity.ok(Map.of("data", response));
+    }
+
+    public ResponseEntity<?> changePassword(ChangePasswordRequest request) {
+        // Lấy thông tin user từ User Service
+        Map<String, Object> user = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("http")
+                        .host("localhost")
+                        .port(8083)
+                        .path("/users/user-info")
+                        .queryParam("email", request.getEmail())
+                        .build()
+                )
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        // Kiểm tra user tồn tại
+        if (user == null) {
+            throw new AuthException("User not found");
+        }
+
+        // Kiểm tra mật khẩu cũ
+        String currentPassword = (String) user.get("password");
+        if (!passwordEncoder.matches(request.getOldPassword(), currentPassword)) {
+            throw new AuthException("Old password is incorrect");
+        }
+
+        // Hash mật khẩu mới
+        String hashedNewPassword = passwordEncoder.encode(request.getNewPassword());
+
+        // Cập nhật mật khẩu mới
+        user.put("password", hashedNewPassword);
+        String userId = (String) user.get("userId");
+
+        webClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .scheme("http")
+                        .host("localhost")
+                        .port(8083)
+                        .path("/users/{id}")
+                        .build(userId)
+                )
+                .bodyValue(user)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        ChangePasswordResponse response = new ChangePasswordResponse(true, "Password changed successfully");
+        return ResponseEntity.ok(response);
     }
 }
