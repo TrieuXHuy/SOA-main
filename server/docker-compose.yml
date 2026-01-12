@@ -1,0 +1,40 @@
+# This configuration is intended for development purpose, it's **your** responsibility to harden it for production
+name: Ecommerce-Infrastructure
+services:
+  # --------------------------------------------------------------
+  # MINIO (S3-compatible object storage)
+  # --------------------------------------------------------------
+  minio:
+    container_name: minio
+    image: quay.io/minio/minio
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin12345}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    restart: always
+
+  # --------------------------------------------------------------
+  # MINIO CLIENT (mc) to create buckets and set policies
+  # --------------------------------------------------------------
+  minio-mc:
+    container_name: minio-mc
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://minio:9000 admin admin12345;
+      mc mb -p local/ecommerce-product-media || true;
+      mc anonymous set public local/ecommerce-product-media;
+      tail -f /dev/null
+      "
+    restart: always
+
+volumes:
+  minio_data:
