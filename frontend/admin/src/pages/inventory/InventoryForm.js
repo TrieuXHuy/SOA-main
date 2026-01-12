@@ -33,8 +33,6 @@ const validationSchema = Yup.object().shape({
 });
 
 export default function InventoryForm({ initialValues, onSubmit, isLoading }) {
-    const classes = useStyles();
-
     return (
         <Formik
             initialValues={initialValues}
