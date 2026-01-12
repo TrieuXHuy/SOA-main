@@ -13,6 +13,7 @@ import Cart from './pages/Cart/Cart';
 import Order from './pages/Order/Order'
 import CartLayout from './layouts/CartLayout/CartLayout';
 import Checkout from "./pages/Checkout/Checkout";
+import ChangePassword from './pages/ChangePassword/ChangePassword';
 
 const ProtectedRoute = () => {
   const { isAuthenticated } = useContext(AuthContext);
@@ -43,6 +44,14 @@ const useRouteElements = () => {
           element: (
             <MainLayout>
               <Profile />
+            </MainLayout>
+          )
+        },
+        {
+          path: path.changePassword,
+          element: (
+            <MainLayout>
+              <ChangePassword />
             </MainLayout>
           )
         },

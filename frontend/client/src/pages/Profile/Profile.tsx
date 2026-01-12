@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { API_URL } from 'src/constants/path'
+import { API_URL, path } from 'src/constants/path'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 type UserProfile = {
   fullName: string
@@ -12,6 +13,7 @@ type UserProfile = {
 }
 
 const Profile = () => {
+  const navigate = useNavigate()
   const [user, setUser] = useState<UserProfile | null>(null)
   const [formData, setFormData] = useState<Omit<UserProfile, 'email' | 'customerTypeId'>>({
     fullName: '',
@@ -185,12 +187,18 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className='mt-8 text-center'>
+          <div className='mt-8 flex gap-4 justify-center'>
             <button
               onClick={handleSubmit}
               className='bg-orange hover:bg-orange/90 text-white font-semibold px-10 py-2 rounded shadow transition-all'
             >
               Lưu thay đổi
+            </button>
+            <button
+              onClick={() => navigate(path.changePassword)}
+              className='bg-gray-600 hover:bg-gray-700 text-white font-semibold px-10 py-2 rounded shadow transition-all'
+            >
+              Đổi mật khẩu
             </button>
           </div>
         </div>
