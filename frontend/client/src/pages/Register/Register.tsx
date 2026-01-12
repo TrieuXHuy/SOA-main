@@ -49,12 +49,12 @@ const Register = () => {
       }
     }
 
-    if (data?.data.user) {
-      setIsAuthenticated(true);
-      setProfile(data?.data.user);
-      navigate(path.home);
+    // Redirect to login if registration was successful (any response without error)
+    if (data && !mutateUserRegisterError && !isLoading) {
+      console.log('Registration successful, redirecting to login');
+      navigate(path.login);
     }
-  }, [data?.data.user, mutateUserRegisterError, navigate, setError, setIsAuthenticated, setProfile]);
+  }, [data, mutateUserRegisterError, isLoading, navigate, setError]);
 
   return (
     <div className='bg-blue-200'>
@@ -64,57 +64,64 @@ const Register = () => {
       <div className='container'>
         <div className='grid grid-cols-1 py-12 lg:grid-cols-5 lg:py-32 lg:pr-10'>
           <div className='lg:col-span-2 lg:col-start-4'>
-            <form onSubmit={handleSubmit(onSubmitHandler)} className='rounded bg-white p-10 shadow-sm' noValidate>
-              <div className='text-2xl'>Đăng ký</div>
-              
-              <Input
-                register={register}
-                name='email'
-                type='email'
-                className='mt-8'
-                placeholder='Email'
-                autoComplete='on'
-                errorMessage={errors.email?.message}
-              />
-              
-              <Input
-                register={register}
-                name='password'
-                type='password'
-                className='mt-2'
-                placeholder='Mật khẩu'
-                autoComplete='on'
-                errorMessage={errors.password?.message}
-              />
+            {isLoading && (
+              <div className='rounded bg-white p-10 shadow-sm flex items-center justify-center'>
+                <div className='text-lg'>Đang xử lý...</div>
+              </div>
+            )}
+            {!isLoading && (
+              <form onSubmit={handleSubmit(onSubmitHandler)} className='rounded bg-white p-10 shadow-sm' noValidate autoComplete='off'>
+                <div className='text-2xl'>Đăng ký</div>
+                
+                <Input
+                  register={register}
+                  name='email'
+                  type='email'
+                  className='mt-8'
+                  placeholder='Email'
+                  autoComplete='off'
+                  errorMessage={errors.email?.message}
+                />
+                
+                <Input
+                  register={register}
+                  name='password'
+                  type='password'
+                  className='mt-2'
+                  placeholder='Mật khẩu'
+                  autoComplete='off'
+                  errorMessage={errors.password?.message}
+                />
 
-              <Input
-                register={register}
-                name='confirm_password'
-                type='password'
-                className='mt-2'
-                placeholder='Nhập lại mật khẩu'
-                autoComplete='on'
-                errorMessage={errors.confirm_password?.message}
-              />
-              
-              <div className='mt-2'>
-                <Button
-                  disabled={isLoading}
-                  isLoading={isLoading}
-                  type='submit'
-                  className='flex w-full items-center justify-center bg-blue-300 py-4 px-2 text-sm uppercase text-white hover:bg-blue-400'
-                >
-                  Đăng ký
-                </Button>
-              </div>
-              
-              <div className='mt-8 flex items-center justify-center'>
-                <span className='text-gray-400'>Bạn đã có tài khoản?</span>
-                <Link className='ml-1 text-red-400' to={path.login}>
-                  Đăng nhập
-                </Link>
-              </div>
-            </form>
+                <Input
+                  register={register}
+                  name='confirm_password'
+                  type='password'
+                  className='mt-2'
+                  placeholder='Nhập lại mật khẩu'
+                  autoComplete='off'
+                  errorMessage={errors.confirm_password?.message}
+                />
+                
+                <div className='mt-2'>
+                  <Button
+                    disabled={isLoading}
+                    isLoading={isLoading}
+                    type='submit'
+                    className='flex w-full items-center justify-center bg-blue-300 py-4 px-2 text-sm uppercase text-white hover:bg-blue-400'
+                  >
+                    Đăng ký
+                  </Button>
+                </div>
+                
+                <div className='mt-8 flex items-center justify-center'>
+                  <span className='text-gray-400'>Bạn đã có tài khoản?</span>
+                  <Link className='ml-1 text-red-400' to={path.login}>
+                    Đăng nhập
+                  </Link>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>

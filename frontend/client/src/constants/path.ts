@@ -16,6 +16,14 @@ export const path = {
 
 export const purchaseUrl = 'purchases';
 
+// API endpoints
+export const apiEndpoints = {
+  login: '/login',
+  register: '/users',  // POST /users for registration
+  logout: '/logout',
+  users: '/users'
+} as const;
+
 // Use environment variable or auto-detect from current hostname
 // For VPN/LAN access, set VITE_API_URL=http://<server-ip>:8080 in .env file
 // Or it will auto-detect from window.location if available

@@ -11,6 +11,9 @@ export type LoginFormValues = Omit<FormValues, 'confirm_password'>;
 const passwordRules = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
 // min 8 characters, 1 upper case letter, 1 lower case letter, 1 numeric digit.
 
+// Simple password validation: at least 6 characters
+const simplePasswordRules = /.{6,}/;
+
 function testPriceMinMax(this: yup.TestContext<yup.AnyObject>) {
   const { price_max, price_min } = this.parent as { price_min: string; price_max: string };
   if (price_min !== '' && price_max !== '') {
@@ -25,13 +28,12 @@ export const inputSchema = yup
     email: yup.string().required('Required').email('Email invalid').min(5).max(32),
     password: yup
       .string()
-      .min(8, 'Password is too short - should be 8 chars minimum.')
+      .min(6, 'Password must be at least 6 characters')
       .max(32, 'Password is too long - should be 32 chars maximum.')
-      .required('Please provide a valid password')
-      .matches(passwordRules, 'At least 1 uppercase letter, 1 lowercase letter, 1 number'),
+      .required('Please provide a valid password'),
     confirm_password: yup
       .string()
-      .min(8)
+      .min(6)
       .max(32)
       .required('Required')
       .oneOf([yup.ref('password')], 'Passwords must match'),
