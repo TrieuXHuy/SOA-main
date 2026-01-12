@@ -8,16 +8,27 @@ type UserRegisterParams = {
   password: string;
 };
 
+type ApiResponse<T> = {
+  code: number;
+  message: string;
+  data?: T;
+  timestamp: string;
+};
+
 type UserRegisterResponse = {
   isLoading: boolean;
   error: unknown;
   isError: boolean;
-  mutate: UseMutateFunction<AuthResponse, Error, UserRegisterParams, unknown>;
-  data?: AuthResponse;
+  mutate: UseMutateFunction<ApiResponse<AuthResponse>, Error, UserRegisterParams, unknown>;
+  data?: ApiResponse<AuthResponse>;
 };
 
 export const useMutateUserRegister = (): UserRegisterResponse => {
-  const { mutate, isLoading, isError, error, data } = useMutation<AuthResponse, Error, UserRegisterParams>({
+  const { mutate, isLoading, isError, error, data } = useMutation<
+    ApiResponse<AuthResponse>,
+    Error,
+    UserRegisterParams
+  >({
     mutationFn: async (userInfo: UserRegisterParams) => {
       // Prepare minimal payload - only required fields
       const payload = {

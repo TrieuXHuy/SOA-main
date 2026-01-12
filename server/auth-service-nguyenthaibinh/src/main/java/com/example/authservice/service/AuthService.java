@@ -29,35 +29,75 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
 
     public ResponseEntity<?> login(LoginRequest request) {
-        Map<String, Object> user = webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("http")
-                        .host("localhost")
-                        .port(8083)
-                        .path("/users/user-info")
-                        .queryParam("email", request.getEmail())
-                        .build()
-                )
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
+        try {
+            // Validate input
+            if (request == null || request.getEmail() == null || request.getPassword() == null) {
+                throw new AuthException("Email và mật khẩu không được để trống");
+            }
 
-        if (user == null || !passwordEncoder.matches(request.getPassword(), (String) user.get("password"))) {
-            throw new AuthException("Invalid email or password");
+            Map<String, Object> response = webClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("http")
+                            .host("localhost")
+                            .port(8083)
+                            .path("/users/user-info")
+                            .queryParam("email", request.getEmail())
+                            .build()
+                    )
+                    .retrieve()
+                    .bodyToMono(Map.class)
+                    .block();
+
+            // Extract user data from ApiResponse
+            if (response == null) {
+                throw new AuthException("Email hoặc mật khẩu không chính xác");
+            }
+
+            // Check if response has error code
+            Integer code = (Integer) response.get("code");
+            if (code != null && code >= 400) {
+                String message = (String) response.get("message");
+                throw new AuthException(message != null ? message : "Email hoặc mật khẩu không chính xác");
+            }
+
+            Map<String, Object> user;
+            if (response.containsKey("data") && response.get("data") != null) {
+                // New format with ApiResponse wrapper
+                user = (Map<String, Object>) response.get("data");
+            } else {
+                // Old format (direct user)
+                user = response;
+            }
+
+            if (user == null || user.get("password") == null) {
+                throw new AuthException("Email hoặc mật khẩu không chính xác");
+            }
+
+            String storedPassword = (String) user.get("password");
+            if (!passwordEncoder.matches(request.getPassword(), storedPassword)) {
+                throw new AuthException("Email hoặc mật khẩu không chính xác");
+            }
+
+            String token = jwtTokenProvider.generateToken((String) user.get("userId"));
+            user.remove("password");
+
+            Map<String, Object> loginResponse = new HashMap<>();
+            loginResponse.put("access_token", token);
+            loginResponse.put("user", user);
+            
+            return ResponseEntity.ok(Map.of("code", 200, "message", "Đăng nhập thành công", "data", loginResponse));
+        } catch (AuthException e) {
+            throw e;
+        } catch (Exception e) {
+            System.err.println("Login error: " + e.getMessage());
+            e.printStackTrace();
+            throw new AuthException("Lỗi đăng nhập: " + e.getMessage());
         }
-
-        String token = jwtTokenProvider.generateToken((String) user.get("userId"));
-        user.remove("password");
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("access_token", token);
-        response.put("user", user);
-        return ResponseEntity.ok(Map.of("data", response));
     }
 
     public ResponseEntity<?> changePassword(ChangePasswordRequest request) {
         // Lấy thông tin user từ User Service
-        Map<String, Object> user = webClient.get()
+        Map<String, Object> response = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .scheme("http")
                         .host("localhost")
@@ -69,6 +109,20 @@ public class AuthService {
                 .retrieve()
                 .bodyToMono(Map.class)
                 .block();
+
+        // Extract user data from ApiResponse
+        if (response == null) {
+            throw new AuthException("User not found");
+        }
+
+        Map<String, Object> user;
+        if (response.containsKey("data")) {
+            // New format with ApiResponse wrapper
+            user = (Map<String, Object>) response.get("data");
+        } else {
+            // Old format (direct user)
+            user = response;
+        }
 
         // Kiểm tra user tồn tại
         if (user == null) {
@@ -104,7 +158,7 @@ public class AuthService {
                 .bodyToMono(Map.class)
                 .block();
 
-        ChangePasswordResponse response = new ChangePasswordResponse(true, "Password changed successfully");
-        return ResponseEntity.ok(response);
+        ChangePasswordResponse changePasswordResponse = new ChangePasswordResponse(true, "Password changed successfully");
+        return ResponseEntity.ok(changePasswordResponse);
     }
 }

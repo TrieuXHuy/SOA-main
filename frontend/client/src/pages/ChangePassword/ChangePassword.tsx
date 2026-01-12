@@ -75,6 +75,26 @@ const ChangePassword = () => {
   };
 
   useEffect(() => {
+    // Handle API response format: {code, message, data, timestamp}
+    if (data) {
+      if (data.code === 200) {
+        // Success
+        setServerError('');
+        reset();
+        // Clear auth data
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('profile');
+        // Force reload and redirect to login
+        setTimeout(() => {
+          window.location.href = `${window.location.origin}${path.login}`;
+        }, 2000);
+      } else if (data.code === 400 || data.code === 401) {
+        // Bad request or unauthorized - likely old password wrong
+        setServerError(data.message || 'Mật khẩu cũ không chính xác');
+      }
+    }
+
+    // Handle axios errors
     if (isAxiosUnprocessableEntityError<ErrorResponseApi<ChangePasswordFormValues>>(mutateError)) {
       const formError = mutateError.response?.data.data;
       if (formError) {
@@ -86,19 +106,7 @@ const ChangePassword = () => {
         });
       }
     } else if (mutateError) {
-      setServerError('Mật khẩu cũ không chính xác hoặc lỗi server');
-    }
-
-    if (data?.success) {
-      setServerError('');
-      reset();
-      // Clear auth data
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('profile');
-      // Force reload and redirect to login
-      setTimeout(() => {
-        window.location.href = `${window.location.origin}${path.login}`;
-      }, 2000);
+      setServerError('Lỗi server, vui lòng thử lại');
     }
   }, [mutateError, data, setError, reset, navigate]);
 

@@ -7,22 +7,24 @@ type ChangePasswordParams = {
   newPassword: string;
 };
 
-type ChangePasswordResponse = {
-  success: boolean;
+type ApiResponse<T = any> = {
+  code: number;
   message: string;
+  data?: T;
+  timestamp: string;
 };
 
 type UseMutateChangePasswordResponse = {
   isLoading: boolean;
   error: unknown;
   isError: boolean;
-  mutate: UseMutateFunction<ChangePasswordResponse, Error, ChangePasswordParams, unknown>;
-  data?: ChangePasswordResponse;
+  mutate: UseMutateFunction<ApiResponse, Error, ChangePasswordParams, unknown>;
+  data?: ApiResponse;
 };
 
 export const useMutateChangePassword = (): UseMutateChangePasswordResponse => {
   const { mutate, isLoading, isError, error, data } = useMutation<
-    ChangePasswordResponse,
+    ApiResponse,
     Error,
     ChangePasswordParams
   >({

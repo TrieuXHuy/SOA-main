@@ -34,6 +34,27 @@ const Register = () => {
   };
 
   useEffect(() => {
+    // Handle API response format: {code, message, data, timestamp}
+    if (data && !mutateUserRegisterError && !isLoading) {
+      if (data.code === 200 || data.code === 201) {
+        console.log('Registration successful, redirecting to login');
+        navigate(path.login);
+      } else if (data.code === 409) {
+        // Email already exists
+        setError('email', {
+          type: 'Server error',
+          message: data.message || 'Email này đã được đăng ký'
+        });
+      } else if (data.code === 400) {
+        // Bad request - show as general error
+        setError('email', {
+          type: 'Server error',
+          message: data.message || 'Thông tin không hợp lệ'
+        });
+      }
+    }
+
+    // Handle axios errors
     if (
       isAxiosUnprocessableEntityError<ErrorResponseApi<Omit<FormValues, 'confirm_password'>>>(mutateUserRegisterError)
     ) {
@@ -47,12 +68,6 @@ const Register = () => {
           });
         });
       }
-    }
-
-    // Redirect to login if registration was successful (any response without error)
-    if (data && !mutateUserRegisterError && !isLoading) {
-      console.log('Registration successful, redirecting to login');
-      navigate(path.login);
     }
   }, [data, mutateUserRegisterError, isLoading, navigate, setError]);
 
