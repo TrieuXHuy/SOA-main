@@ -3,15 +3,22 @@ import {
     Grid, Table, TableBody, TableCell, TablePagination, TableRow,
     TableHead, Checkbox, TableSortLabel, CircularProgress, Box,
     InputAdornment, TextField as Input, Dialog, DialogActions,
-    DialogContent, DialogContentText, DialogTitle
+    DialogContent, DialogContentText, DialogTitle, Tooltip, IconButton
 } from "@mui/material";
-import { Search as SearchIcon } from "@mui/icons-material";
+import {
+    Search as SearchIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Visibility as VisibilityIcon,
+    Add as AddIcon
+} from "@mui/icons-material";
 import { Typography, Button } from "../../components/Wrappers";
 import Widget from "../../components/Widget";
 import useStyles from "./styles";
-import { API_URL } from "../../constants/path";
 import { useInventories } from "../../hooks/useInventories";
-import axios from "axios";
+import { deleteInventory } from "../../services/inventoryService";
+import InventoryDialog from "./InventoryDialog";
+import InventoryDetailDialog from "./InventoryDetailDialog";
 
 // Cập nhật tiêu đề các cột
 const headCells = [
@@ -21,6 +28,7 @@ const headCells = [
     { id: "exportedQuantity", label: "Số lượng xuất" },
     { id: "exportDate", label: "Cập nhật cuối" },
     { id: "inventoryStatus", label: "Trạng thái" },
+    { id: "actions", label: "Hành động" },
 ];
 
 function desc(a, b, orderBy) {
@@ -88,6 +96,9 @@ export default function InventoryList() {
     const [rowsPerPage, setRowsPerPage] = useState(5);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [inventoryToDelete, setInventoryToDelete] = useState(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedInventory, setSelectedInventory] = useState(null);
+    const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
     useEffect(() => {
         setFilteredInventories(inventories);
@@ -133,7 +144,7 @@ export default function InventoryList() {
 
     const confirmDelete = async () => {
         try {
-            await axios.delete(`${API_URL}/inventories/${inventoryToDelete}`);
+            await deleteInventory(inventoryToDelete);
             setFilteredInventories(prev => prev.filter(i => i.inventoryID !== inventoryToDelete));
             setInventories(prev => prev.filter(i => i.inventoryID !== inventoryToDelete));
         } catch (err) {
@@ -141,6 +152,48 @@ export default function InventoryList() {
         } finally {
             setConfirmOpen(false);
             setInventoryToDelete(null);
+        }
+    };
+
+    const handleAddNew = () => {
+        setSelectedInventory(null);
+        setDialogOpen(true);
+    };
+
+    const handleEdit = (event, inventory) => {
+        event.stopPropagation();
+        setSelectedInventory(inventory);
+        setDialogOpen(true);
+    };
+
+    const handleViewDetail = (event, inventory) => {
+        event.stopPropagation();
+        setSelectedInventory(inventory);
+        setDetailDialogOpen(true);
+    };
+
+    const handleDeleteClick = (event, inventory) => {
+        event.stopPropagation();
+        setInventoryToDelete(inventory.inventoryID);
+        setConfirmOpen(true);
+    };
+
+    const handleDialogClose = () => {
+        setDialogOpen(false);
+        setSelectedInventory(null);
+    };
+
+    const handleDialogSuccess = (newInventory) => {
+        if (selectedInventory) {
+            // Update case
+            setInventories(prev =>
+                prev.map(item =>
+                    item.inventoryID === newInventory.inventoryID ? newInventory : item
+                )
+            );
+        } else {
+            // Create case
+            setInventories(prev => [...prev, newInventory]);
         }
     };
 
@@ -152,19 +205,29 @@ export default function InventoryList() {
                     header={
                         <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
                             <Typography variant="h6">Danh sách tồn kho</Typography>
-                            <Input
-                                label="Tìm theo mã sản phẩm"
-                                margin="dense"
-                                variant="outlined"
-                                onChange={searchInventories}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon />
-                                        </InputAdornment>
-                                    )
-                                }}
-                            />
+                            <Box display="flex" gap={2} alignItems="center">
+                                <Input
+                                    label="Tìm theo mã sản phẩm"
+                                    margin="dense"
+                                    variant="outlined"
+                                    onChange={searchInventories}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <InputAdornment position="start">
+                                                <SearchIcon />
+                                            </InputAdornment>
+                                        )
+                                    }}
+                                />
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<AddIcon />}
+                                    onClick={handleAddNew}
+                                >
+                                    Thêm mới
+                                </Button>
+                            </Box>
                         </Box>
                     }
                 >
@@ -206,6 +269,35 @@ export default function InventoryList() {
                                                     <TableCell>{row.exportedQuantity}</TableCell>
                                                     <TableCell>{row.exportDate}</TableCell>
                                                     <TableCell>{row.inventoryStatus}</TableCell>
+                                                    <TableCell align="center" onClick={e => e.stopPropagation()}>
+                                                        <Tooltip title="Xem chi tiết">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="primary"
+                                                                onClick={(e) => handleViewDetail(e, row)}
+                                                            >
+                                                                <VisibilityIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Chỉnh sửa">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="primary"
+                                                                onClick={(e) => handleEdit(e, row)}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Xóa">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={(e) => handleDeleteClick(e, row)}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
                                                 </TableRow>
                                             );
                                         })}
@@ -238,6 +330,21 @@ export default function InventoryList() {
                     <Button onClick={confirmDelete} color="secondary" variant="contained">Xác nhận</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Dialog CRUD */}
+            <InventoryDialog
+                open={dialogOpen}
+                onClose={handleDialogClose}
+                inventory={selectedInventory}
+                onSuccess={handleDialogSuccess}
+            />
+
+            {/* Dialog Chi tiết */}
+            <InventoryDetailDialog
+                open={detailDialogOpen}
+                onClose={() => setDetailDialogOpen(false)}
+                inventory={selectedInventory}
+            />
         </Grid>
     );
 }

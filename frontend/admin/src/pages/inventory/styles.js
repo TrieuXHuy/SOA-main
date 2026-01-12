@@ -15,3 +15,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default useStyles;
+
+export const useFormStyles = makeStyles((theme) => ({
+    form: {
+        padding: theme.spacing(2),
+    },
+    submitButton: {
+        marginTop: theme.spacing(2),
+    },
+}));
