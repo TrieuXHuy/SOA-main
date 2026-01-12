@@ -75,9 +75,10 @@ const ChangePassword = () => {
   };
 
   useEffect(() => {
-    // Handle API response format: {code, message, data, timestamp}
+    // Handle API response format: {success, message} or {code, message, data, timestamp}
     if (data) {
-      if (data.code === 200) {
+      // Check both response formats
+      if (data.success === true || data.code === 200) {
         // Success
         setServerError('');
         reset();
