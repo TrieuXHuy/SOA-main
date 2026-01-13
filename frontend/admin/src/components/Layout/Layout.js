@@ -81,7 +81,7 @@ import UsersTablePage from 'pages/CRUD/Users/table/UsersTablePage';
 
 //Sidebar structure
 import structure from '../Sidebar/SidebarStructure'
-import InventoryList from "../../pages/inventory/inventoryList";
+// import InventoryList from "../../pages/inventory/inventoryList";
 import ProductTypeList from "../../pages/productType/ProductTypeList";
 import CreateProductType from "../../pages/productType/CreateProductType";
 import EditProductType from "../../pages/productType/EditProductType";
@@ -188,7 +188,7 @@ function Layout(props) {
           <Route path="/app/ecommerce/gridproducts" component={ProductsGrid}/>
           <Route path="/app/ecommerce/discounts" component={DiscountsPage}/>
 
-          <Route path="/app/inventory/list" component={InventoryList}></Route>
+          {/* <Route path="/app/inventory/list" component={InventoryList}></Route> */}
 
           <Route path="/app/product-type" exact component={ProductTypeList}></Route>
           <Route path="/app/product-type/create" exact component={CreateProductType}></Route>

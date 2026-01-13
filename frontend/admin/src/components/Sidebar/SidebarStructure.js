@@ -41,19 +41,19 @@ const structure = [
       },
     ],
   },
-  {
-    id: 3,
-    label: 'Kho hàng',
-    link: '/app/inventory',
-    icon: <InventoryIcon />,
-    children: [
-      {
-        label: 'Danh sách kho',
-        link: '/app/inventory/list',
-        icon: <ListAltIcon />,
-      },
-    ],
-  },
+  // {
+  //   id: 3,
+  //   label: 'Kho hàng',
+  //   link: '/app/inventory',
+  //   icon: <InventoryIcon />,
+  //   children: [
+  //     {
+  //       label: 'Danh sách kho',
+  //       link: '/app/inventory/list',
+  //       icon: <ListAltIcon />,
+  //     },
+  //   ],
+  // },
   {
     id: 2,
     label: 'Người dùng',

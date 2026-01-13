@@ -194,12 +194,12 @@ const Profile = () => {
             >
               Lưu thay đổi
             </button>
-            <button
+            {/* <button
               onClick={() => navigate(path.changePassword)}
               className='bg-gray-600 hover:bg-gray-700 text-white font-semibold px-10 py-2 rounded shadow transition-all'
             >
               Đổi mật khẩu
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
